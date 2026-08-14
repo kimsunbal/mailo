@@ -24,7 +24,7 @@ license = "MIT"                 # SPDX expression, not the deprecated table (PEP
 license-files = ["LICENSE"]
 
 [[project.authors]]
-name = "jmlee"
+name = "Jeongmin Lee"
 
 [project.urls]
 Homepage = "https://github.com/1935138/mailo"
