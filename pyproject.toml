@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mailo"
+dynamic = ["version"]
+description = "Notify yourself when your AI agent gets stuck, fails, or finishes."
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = ["notification", "claude-code", "hooks", "discord", "smtp", "agent"]
+dependencies = []
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Communications :: Email",
+    "Topic :: Utilities",
+]
+# license = "MIT"  <- undecided. Fill in the SPDX expression once a LICENSE file exists (PEP 639).
+
+[[project.authors]]
+name = "jmlee"
+
+[project.urls]
+Homepage = "https://github.com/1935138/mailo"
+Documentation = "https://github.com/1935138/mailo/tree/main/docs/mailo"
+Issues = "https://github.com/1935138/mailo/issues"
+
+[project.scripts]
+mailo = "mailo.cli:main"
+
+[tool.hatch.version]
+path = "src/mailo/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+# Keep the config file out of the package under all circumstances — it holds credentials.
+include = ["src/mailo", "README.md", "DESIGN.md", "docs"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mailo"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]

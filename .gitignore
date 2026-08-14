@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+.ruff_cache/
+.pytest_cache/
+
+# Files that hold credentials — never commit them, even by accident
+config.toml
+*.local.toml
