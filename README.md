@@ -18,10 +18,13 @@ Code, catches that moment, and pushes it to your phone.
 > measured against a live session yet ([docs/mailo/07-open-questions.md](docs/mailo/07-open-questions.md) Q5).
 
 ```bash
-git clone https://github.com/1935138/mailo && cd mailo
-uv tool install .        # or: pipx install .
+uv tool install mailo-cli    # or: pipx install mailo-cli
 mailo init
 ```
+
+The distribution is called **`mailo-cli`** because PyPI rejects `mailo` as too
+similar to an existing project. Everything else — the command, the module, the
+config paths — is `mailo`.
 
 | | |
 |---|---|

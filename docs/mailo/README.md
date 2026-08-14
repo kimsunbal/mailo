@@ -79,7 +79,7 @@ The line that keeps this from turning into an observability platform.
   saving → one-line transfer (§6.3)
 - Four events, routing, cooldown, SMTP daily cap
 - Context enrichment via the `SessionStart` cache
-- PyPI distribution (`uv tool install mailo` / `pipx install mailo`), Python ≥ 3.11
+- PyPI distribution as `mailo-cli` (`uv tool install mailo-cli`), Python ≥ 3.11
 
 **Excluded (v2 and later)**
 - **More channels** — the adapter interface stays extensible, but the count does
