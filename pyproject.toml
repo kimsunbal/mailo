@@ -3,7 +3,10 @@ requires = ["hatchling>=1.27"]   # 1.27 is where PEP 639 license-files support l
 build-backend = "hatchling.build"
 
 [project]
-name = "mailo"
+# The distribution name is `mailo-cli`; everything else — the command, the module,
+# the config paths — is `mailo`. PyPI rejects `mailo` as too similar to the existing
+# `mailos`, and its similarity check runs at registration, so there is no way round it.
+name = "mailo-cli"
 dynamic = ["version"]
 description = "Notify yourself when your AI agent gets stuck, fails, or finishes."
 readme = "README.md"

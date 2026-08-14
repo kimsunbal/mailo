@@ -49,7 +49,7 @@ the default Python on Ubuntu 22.04 (3.10). Why this over falling back to JSON or
 writing a TOML parser: the config is a file **humans edit by hand**, so comments
 and readability matter, and JSON has no comments; writing a parser would be
 trading zero dependencies for worse debt. Users on 3.10 can work around it with
-`uv tool install --python 3.11 mailo`.
+`uv tool install --python 3.11 mailo-cli`.
 
 Every secret can be overridden with a `$MAILO_<CHANNEL>_<KEY>` environment
 variable. That is the path for containers and CI, where planting a config file is

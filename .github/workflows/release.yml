@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/mailo
+      url: https://test.pypi.org/p/mailo-cli
     permissions:
       id-token: write            # required to mint the OIDC token
     steps:
@@ -113,7 +113,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/mailo
+      url: https://pypi.org/p/mailo-cli
     permissions:
       id-token: write
     steps:
