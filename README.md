@@ -97,5 +97,4 @@ src/mailo/
 
 ## Licence
 
-**Undecided.** The packaging notes assume MIT ([docs/pypi/](docs/pypi/)).
-There is no `LICENSE` file yet.
+[MIT](LICENSE).

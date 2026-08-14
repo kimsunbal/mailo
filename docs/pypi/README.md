@@ -47,7 +47,9 @@ Details are in each file; the decisions are collected here.
 
 - ~~The value of `requires-python`~~ → **`>=3.11`, settled** (2026-08-13), so the
   config can be TOML via `tomllib`. See [DESIGN.md](../../DESIGN.md) §6.1.
-- **Which licence**: MIT was assumed. Still to be decided.
+- ~~Which licence~~ → **MIT, settled** (2026-08-14). `LICENSE` is at the repository
+  root, and `pyproject.toml` carries `license = "MIT"` with
+  `license-files = ["LICENSE"]`.
 - **Name reservation**: `mailo` is available on PyPI but **not reserved.**
   Registering a pending publisher **does not hold the name until the first upload.**
   (03 §4)
