@@ -1,0 +1,128 @@
+# Publishing uses Trusted Publishing (OIDC), so no API token is stored here.
+#
+# The filename must stay `release.yml`: it is registered with PyPI and TestPyPI as
+# part of the pending publisher. Renaming it makes publishing fail quietly.
+# See docs/pypi/03-trusted-publishing.md.
+
+name: Publish mailo to PyPI and TestPyPI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test on Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # The minimum we claim to support, and the newest. mailo has no
+        # dependencies, so this costs seconds.
+        python-version: ["3.11", "3.13"]
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Run the test suite
+      run: PYTHONPATH=src python -m unittest discover -s tests -v
+
+  build:
+    name: Build distribution
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-python@v6
+      with:
+        python-version: "3.x"
+
+    # Publishing 0.1.0 from a tag that says v0.2.0 is easy to do and impossible to
+    # undo — PyPI burns a version number permanently. Checked here rather than in
+    # the publish job, which deliberately has no checkout.
+    - name: Check the tag matches the package version
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        tag="${GITHUB_REF_NAME#v}"
+        version=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' src/mailo/__init__.py)
+        if [ "$tag" != "$version" ]; then
+          echo "::error::tag ${GITHUB_REF_NAME} does not match __version__ ${version}"
+          exit 1
+        fi
+        echo "tag ${GITHUB_REF_NAME} matches __version__ ${version}"
+
+    - name: Install pypa/build
+      run: python3 -m pip install build --user
+    - name: Build a wheel and a source tarball
+      run: python3 -m build
+
+    # The config file holds credentials and must never reach a distribution.
+    - name: Check no configuration leaked into the sdist
+      run: |
+        if tar tzf dist/*.tar.gz | grep -iE 'config\.toml|\.env|secret'; then
+          echo "::error::a configuration or secret file is inside the sdist"
+          exit 1
+        fi
+
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v5
+      with:
+        name: python-package-distributions
+        path: dist/
+
+  publish-to-testpypi:
+    name: Publish to TestPyPI
+    # Not on every push to main: that would fail until a trusted publisher is
+    # registered, and afterwards it would publish a release candidate nobody asked
+    # for. Tags and manual runs only.
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/mailo
+    permissions:
+      id-token: write            # required to mint the OIDC token
+    steps:
+    - name: Download the dists
+      uses: actions/download-artifact@v6
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish to TestPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
+        # TestPyPI refuses re-uploads of the same version, so pushing to main
+        # without a version bump would fail this job for no useful reason.
+        skip-existing: true
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    if: startsWith(github.ref, 'refs/tags/')     # tagged commits only
+    # Depends on TestPyPI rather than on build, so a tagged release goes there
+    # first. PyPI cannot be undone — a version number is burnt even if the files
+    # are deleted — so the rehearsal is worth the extra minute.
+    needs: [publish-to-testpypi]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/mailo
+    permissions:
+      id-token: write
+    steps:
+    # No checkout here on purpose: this job holds id-token: write, so its attack
+    # surface is kept to the downloaded artifacts and nothing else.
+    - name: Download the dists
+      uses: actions/download-artifact@v6
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
