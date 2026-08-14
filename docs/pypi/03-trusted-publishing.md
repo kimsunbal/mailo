@@ -76,90 +76,33 @@ at <https://test.pypi.org/manage/account/publishing/>.
 
 ## 3. The GitHub Actions workflow
 
-The official guide's workflow, adapted for mailo. Save it as
-`.github/workflows/release.yml` — the filename must **exactly match** the workflow
-filename registered with PyPI.
+It lives at **[`.github/workflows/release.yml`](../../.github/workflows/release.yml)**.
+The filename must **exactly match** the workflow filename registered with PyPI, so
+renaming it breaks publishing quietly.
 
-```yaml
-name: Publish mailo to PyPI and TestPyPI
+It is the official guide's workflow with four deviations, each for a reason:
 
-on: push
-
-jobs:
-  build:
-    name: Build distribution
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v6
-      with:
-        persist-credentials: false
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: "3.x"
-    - name: Install pypa/build
-      run: python3 -m pip install build --user
-    - name: Build a binary wheel and a source tarball
-      run: python3 -m build
-    - name: Store the distribution packages
-      uses: actions/upload-artifact@v5
-      with:
-        name: python-package-distributions
-        path: dist/
-
-  publish-to-pypi:
-    name: Publish to PyPI
-    if: startsWith(github.ref, 'refs/tags/')     # tagged commits only
-    needs: [build]
-    runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/mailo
-    permissions:
-      id-token: write                            # required to mint the OIDC token
-    steps:
-    - name: Download all the dists
-      uses: actions/download-artifact@v6
-      with:
-        name: python-package-distributions
-        path: dist/
-    - name: Publish to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-
-  publish-to-testpypi:
-    name: Publish to TestPyPI
-    needs: [build]
-    runs-on: ubuntu-latest
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/mailo
-    permissions:
-      id-token: write
-    steps:
-    - name: Download all the dists
-      uses: actions/download-artifact@v6
-      with:
-        name: python-package-distributions
-        path: dist/
-    - name: Publish to TestPyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: https://test.pypi.org/legacy/
-```
+| Deviation | Why |
+|---|---|
+| A `test` job gates `build` | Publishing untested code to an index that cannot be undone is not a trade worth making. Two Python versions, 3.11 (our minimum) and the newest; with no dependencies it costs seconds |
+| The tag must match `__version__` | Tagging `v0.2.0` on a tree that still says `0.1.0` publishes the wrong version number and burns it forever. Checked in `build`, which has the checkout, not in the publish jobs, which deliberately do not |
+| The sdist is scanned for config files | The config file holds credentials. The `src/` layout keeps it out naturally, but "naturally" is not a guarantee worth shipping on |
+| PyPI needs TestPyPI, and TestPyPI does not run on pushes to main | On a tag the rehearsal happens first and the real upload second, rather than both at once. Publishing to TestPyPI on every push would also fail until a publisher is registered, and afterwards would upload releases nobody asked for. `skip-existing: true` keeps a re-run from failing on an unbumped version |
 
 ### 3.1 What matters in this structure
 
 - **Building and publishing are separate jobs.** `build` uploads the artefacts and
-  the publish jobs pull them down via `needs: [build]`. The publish jobs do not even
-  check out the source — the point is to minimise the attack surface of a job
-  holding `id-token: write`.
+  the publish jobs pull them down. The publish jobs do not even check out the
+  source — the point is to minimise the attack surface of a job holding
+  `id-token: write`.
 - **Without `permissions: id-token: write`** the OIDC token cannot be obtained and
   authentication fails.
-- **PyPI only on tags** (`if: startsWith(github.ref, 'refs/tags/')`), **TestPyPI on
-  every push.** → TestPyPI also refuses re-uploads of the same version, so pushing
-  without a version bump fails that job. In practice, add an `if` or pass
-  `skip-existing: true`.
+- **Both publish jobs are tag-gated** (`if: startsWith(github.ref, 'refs/tags/')`),
+  with TestPyPI also reachable through `workflow_dispatch` for a manual rehearsal.
 - **`persist-credentials: false`** clears the credentials checkout would leave behind.
+
+What a push to `main` runs, then, is `test` and `build` only — enough to catch a
+broken tree without touching either index.
 
 ### 3.2 Signing and attestations (PEP 740)
 
