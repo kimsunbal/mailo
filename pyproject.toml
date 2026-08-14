@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]   # 1.27 is where PEP 639 license-files support lands
 build-backend = "hatchling.build"
 
 [project]
@@ -20,7 +20,8 @@ classifiers = [
     "Topic :: Communications :: Email",
     "Topic :: Utilities",
 ]
-# license = "MIT"  <- undecided. Fill in the SPDX expression once a LICENSE file exists (PEP 639).
+license = "MIT"                 # SPDX expression, not the deprecated table (PEP 639)
+license-files = ["LICENSE"]
 
 [[project.authors]]
 name = "jmlee"

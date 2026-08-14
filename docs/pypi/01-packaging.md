@@ -125,7 +125,7 @@ mailo.
 ## 5. Draft pyproject.toml for mailo
 
 > `requires-python = ">=3.11"` is settled ([DESIGN.md](../../DESIGN.md) §6.1).
-> The licence is assumed to be MIT and is still undecided.
+> The licence is MIT, settled 2026-08-14.
 
 ```toml
 [build-system]
